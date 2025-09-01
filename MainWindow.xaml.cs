@@ -1,15 +1,25 @@
-﻿using OpenCvSharp;
-using System;
-using System.Collections.Generic;
+﻿using Microsoft.VisualBasic;
+using OpenCvSharp;
+using OpenCvSharp.WpfExtensions;
 using System.ComponentModel;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
 
 namespace BW_to_WandAlpha
 {
-    public partial class MainWindow : System.Windows.Window, INotifyPropertyChanged
+    /// <summary>
+    /// Interaction logic for MainWindow.xaml
+    /// </summary>
+    public partial class MainWindow : System.Windows.Window
     {
         const string titre = "Black and White → White and Alpha (Transparent)";
         Mat source;
@@ -27,25 +37,23 @@ namespace BW_to_WandAlpha
 
         public string _folder_IN
         {
-            get { return Properties.Settings.Default["folder_IN"].ToString(); }
+            get { return Properties.Settings.Default.folder_IN.ToString(); }
             set
             {
-                Properties.Settings.Default["folder_IN"] = value;
+                Properties.Settings.Default.folder_IN = value;
                 Properties.Settings.Default.Save();
-                OnPropertyChanged("_folder_IN");
-                if(IsLoaded)
-                    ReadDirectory();
+                OnPropertyChanged(nameof(_folder_IN));
             }
         }
 
         public string _folder_OUT
         {
-            get { return Properties.Settings.Default["folder_OUT"].ToString(); }
+            get { return Properties.Settings.Default.folder_OUT.ToString(); }
             set
             {
-                Properties.Settings.Default["folder_OUT"] = value;
+                Properties.Settings.Default.folder_OUT = value;
                 Properties.Settings.Default.Save();
-                OnPropertyChanged("_folder_OUT");
+                OnPropertyChanged(nameof(_folder_OUT));
             }
         }
         #endregion
@@ -66,31 +74,45 @@ namespace BW_to_WandAlpha
         #region UI
         private void btn_ReadDirectory_click(object sender, MouseButtonEventArgs e)
         {
-            ReadDirectory();
-        }
-
-        void ReadDirectory()
-        {
             mats = new Dictionary<string, Mat>();
 
             if (!System.IO.Directory.Exists(_folder_IN))
                 return;
             string[] fichiers = System.IO.Directory.GetFiles(_folder_IN);
             lb.Items.Clear();
+
+            bool first = true;
             foreach (string fichier in fichiers)
             {
                 Mat mat = new Mat(fichier, ImreadModes.Unchanged);
+                if (mat.Empty())
+                    continue;
                 source = mat;
                 mats.Add(fichier, mat);
                 lb.Items.Add(newItem(mat, fichier));
+                if (first)
+                {
+                    first = false;
+                    lb.SelectedIndex = 0;
+                }
                 //Application.Current.
                 //Dispatcher.BeginInvoke(new Action(() =>                    {
                 Title = titre + " - " + lb.Items.Count + " / " + fichiers.Length;
                 //}));
                 System.Threading.Thread.Sleep(1);
             }
+
+
         }
 
+        void btn_CreateNewDirectory_click(object sender, MouseButtonEventArgs e)
+        {
+            string tmp = _folder_IN + "\\new";
+            if (System.IO.Directory.Exists(tmp))
+                if (MessageBox.Show(tmp + "\nalready exists. Continue ?", "Already exists", MessageBoxButton.YesNo) == MessageBoxResult.No) return;
+
+            _folder_OUT = tmp;
+        }
 
         void lb_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -103,33 +125,48 @@ namespace BW_to_WandAlpha
                 ProcessOnSelectedItem();
         }
 
-        private void btn_SaveSelected_click(object sender, MouseButtonEventArgs e)
+        void btn_SaveSelected_click(object sender, MouseButtonEventArgs e)
+        {
+            ListBoxItem item = (ListBoxItem)lb.SelectedItem;
+            if (item == null)
+                return;
+            string msg = Process(item);
+            MessageBox.Show(msg);
+
+        }
+
+        string Process(ListBoxItem item)
         {
             string msg;
             try
             {
-                ListBoxItem item = (ListBoxItem)lb.SelectedItem;
-                if (item == null)
-                    return;
-
                 string path = item.ToolTip.ToString();
                 Mat mat = mats[path];
                 Mat mat_out = ImageProcessing(mat);
 
-                string filename = System.IO.Path.GetFileNameWithoutExtension(path);
-
-                //create folder ; don't if existing
+                //create folder if missing
                 System.IO.Directory.CreateDirectory(_folder_OUT);
 
+                string filename = System.IO.Path.GetFileNameWithoutExtension(path);
                 string fullfilename = _folder_OUT + "\\" + filename + ".png";
                 mat_out.SaveImage(fullfilename);
-                msg = "File created : \n\n" + fullfilename;
+                msg = fullfilename + " created";
             }
             catch (Exception ex)
             {
                 msg = ex.Message;
+                MessageBox.Show(msg);
             }
-            MessageBox.Show(msg);
+            return msg;
+        }
+
+        void btn_SaveAll_click(object sender, MouseButtonEventArgs e)
+        {
+            List<string> msgs = new List<string>();
+            foreach (ListBoxItem item in lb.Items)
+                msgs.Add(Process(item));
+
+            MessageBox.Show(string.Join(",\n", msgs));
         }
 
         #endregion
@@ -138,7 +175,7 @@ namespace BW_to_WandAlpha
         {
             ListBoxItem item = new ListBoxItem();
             Image img = new Image();
-            img.Source = conversion.ToImageSource(mat);
+            img.Source = mat.ToBitmapSource();// conversion.ToImageSource(mat);
             img.Height = 100;
             img.Stretch = Stretch.Uniform;
             item.Content = img;
@@ -208,12 +245,12 @@ namespace BW_to_WandAlpha
             if (lb.SelectedItem == null) return;
             ListBoxItem item = (ListBoxItem)lb.SelectedItem;
             Mat mat = mats[item.ToolTip.ToString()];
-            img_before.Source = conversion.ToImageSource(mat);
+            img_before.Source = mat.ToBitmapSource();// conversion.ToImageSource(mat);
             Mat mat_out = ImageProcessing(mat);
-            img_after.Source = conversion.ToImageSource(mat_out);
+            img_after.Source = mat_out.ToBitmapSource();// conversion.ToImageSource(mat_out);
         }
 
-        void ColorNew(object sender, Standard_UC_JJO.ColorPickerJJO.NewColorEventArgs e)
+        void ColorNew(object sender, ColorPickerJJO.NewColorEventArgs e)
         {
             color = e.color;
             _colorRGB.Content = "RGB (" + e.color.R + ", " + e.color.G + ", " + e.color.B + ")";

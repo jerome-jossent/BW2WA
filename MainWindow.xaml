@@ -1,26 +1,24 @@
-﻿<Window 
-        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit" 
-        xmlns:Standard_UC_JJO="clr-namespace:Standard_UC_JJO"  
-        x:Class="BW_to_WandAlpha.MainWindow"
+﻿<Window x:Class="BW_to_WandAlpha.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:BW_to_WandAlpha" 
+        xmlns:local="clr-namespace:BW_to_WandAlpha"
         mc:Ignorable="d"
-    
+        
         Title="Black and White → White and Alpha (Transparent)" 
         Height="600" Width="600"
         x:Name="mainWindow"
-        Loaded="mainWindow_Loaded"
+        Loaded="mainWindow_Loaded" Icon="/BW_to_WAlpha.ico" 
         >
+    
     <Window.Background>
-        <ImageBrush ImageSource="Images/damier.bmp" TileMode="Tile" ViewportUnits="Absolute" Viewport="0,0,32,32"/>
+        <ImageBrush ImageSource="/Images/damier.bmp" TileMode="Tile" ViewportUnits="Absolute" Viewport="0,0,32,32"/>
     </Window.Background>
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="auto"/>
+            <RowDefinition Height="120"/>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
@@ -32,56 +30,61 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
+            <!--PARAMETRES-->
             <Grid Grid.Column="0">
                 <StackPanel Orientation="Vertical">
 
                     <!-- SOURCES -->
-                    <Grid Margin="3">
+                    <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="auto"/>
                         </Grid.ColumnDefinitions>
-                        <Standard_UC_JJO:PickFolder_JJO Height="30" _ModeTBX="False" _folder="{Binding _folder_IN, ElementName=mainWindow, Mode=TwoWay}" />
-                        <Image Grid.Column="1" Source="/Images/refresh.png" Width="25" Height="25" RenderOptions.BitmapScalingMode="Fant" MouseDown="btn_ReadDirectory_click" Margin="3,0,0,0" />
+                        <local:PickFolder_JJO Margin="1" Height="30" _folder="{Binding _folder_IN, ElementName=mainWindow, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        <Image Margin="1" Grid.Column="1" Source="/Images/refresh.png" Width="25" Height="25" RenderOptions.BitmapScalingMode="Fant" MouseDown="btn_ReadDirectory_click" />
                     </Grid>
 
                     <!-- DESTINATIONS -->
-                    <Grid Margin="3">
+                    <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="auto"/>
                         </Grid.ColumnDefinitions>
-                        <Standard_UC_JJO:PickFolder_JJO Height="30" _folder="{Binding _folder_OUT, ElementName=mainWindow, Mode=TwoWay}" />
-                        <Image Grid.Column="1" Source="/Images/Download.png" Width="25" Height="25" RenderOptions.BitmapScalingMode="Fant" MouseDown="btn_SaveSelected_click" Margin="3,0,0,0" />
+                        <local:PickFolder_JJO Margin="1" Height="30" _folder="{Binding _folder_OUT, ElementName=mainWindow, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        <Image Margin="1" Grid.Column="1" Source="/Images/new.png" Width="25" Height="25" RenderOptions.BitmapScalingMode="Fant" MouseDown="btn_CreateNewDirectory_click" />
                     </Grid>
 
                     <!-- Alpha -->
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Alpha" Width="60" Margin="5"/>
-                        <CheckBox x:Name="ckb_not_a" Content="Invert" VerticalAlignment="Center" IsChecked="True"
+                        <TextBlock Text="Alpha" Margin="5"/>
+                        <CheckBox x:Name="ckb_not_a" Content="invert" VerticalAlignment="Center" IsChecked="True"
                                   Checked="ckb_management" Unchecked="ckb_management"/>
-                    </StackPanel>
 
-                    <!-- Pastille couleur -->
-                    <StackPanel Orientation="Horizontal" Margin="3">
-                        <TextBlock Margin="5" Text="Image Color"/>
+                        <!-- Pastille couleur -->
+                        <TextBlock Margin="10,5,2,5" Text="Image Color"/>
                         <Border BorderThickness="1" BorderBrush="Black">
                             <Label Name="_ColorPicker" Background="Black" Width="25" Height="25" />
                         </Border>
-                        <Label Name="_colorRGB" Content="RGB (0,0,0)"/>
-                        
+                        <Label Name="_colorRGB" Content="RGB (255,255,255)"/>
                     </StackPanel>
 
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Margin="5" Text="Create selected image"/>
+                        <Image Margin="1" Source="/Images/Download.png" Width="25" Height="25" RenderOptions.BitmapScalingMode="Fant" MouseDown="btn_SaveSelected_click" />
+
+                        <TextBlock Margin="15,5,5,5" Text="Create all images"/>
+                        <Image Margin="1" Source="/Images/Download2.png" Width="25" Height="25" RenderOptions.BitmapScalingMode="Fant" MouseDown="btn_SaveAll_click" />
+                    </StackPanel>
                 </StackPanel>
             </Grid>
 
             <!--Séparation déplaçable-->
             <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" />
-            
+
             <!--ColorPicker-->
-            <Standard_UC_JJO:ColorPickerJJO Grid.Column="2" x:Name="_colorPickerJJO" _Target_Length="5" Height="130"/>
+            <local:ColorPickerJJO Grid.Column="2" x:Name="_colorPickerJJO" _Target_Length="5"/>
         </Grid>
-        
+
         <!--Liste d'images contenues dans le dossier-->
         <Grid Grid.Row="1" >
             <ListBox x:Name="lb" Height="130" SelectionChanged="lb_SelectionChanged" >

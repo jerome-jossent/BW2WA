@@ -1,20 +1,8 @@
-﻿using OpenCvSharp.Dnn;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
-namespace Standard_UC_JJO
+namespace BW_to_WandAlpha
 {
     public partial class PickFolder_JJO : UserControl
     {
@@ -43,9 +31,10 @@ namespace Standard_UC_JJO
         public PickFolder_JJO()
         {
             InitializeComponent();
+            DataContext = this; //2025/08/25 ??
         }
 
-        public object _folder
+        public string _folder
         {
             get { return (string)GetValue(FolderProperty); }
             set { SetValue(FolderProperty, value); }
@@ -53,33 +42,29 @@ namespace Standard_UC_JJO
 
         public static readonly DependencyProperty FolderProperty =
                                     DependencyProperty.Register("_folder",
-                                        typeof(object),
+                                        typeof(string),
                                         typeof(PickFolder_JJO),
                                         new FrameworkPropertyMetadata(null, OnTextBindingChanged));
         private static void OnTextBindingChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
+            if (d != null)
+            {
             PickFolder_JJO pf = d as PickFolder_JJO;
-            if (pf == null || e.NewValue == null) return;
             pf._folder = e.NewValue as string;
+            }
         }
 
         private void Folder_click(object sender, MouseButtonEventArgs e)
         {
             var dialog = new System.Windows.Forms.FolderBrowserDialog();
             //default folder
-            if (System.IO.Directory.Exists((string)_folder))
-                dialog.SelectedPath = (string)_folder;
+            if (System.IO.Directory.Exists(_folder))
+                dialog.SelectedPath = _folder;
 
             System.Windows.Forms.DialogResult result = dialog.ShowDialog();
 
             if (result == System.Windows.Forms.DialogResult.OK)
                 _folder = dialog.SelectedPath;
         }
-
-
-
-
-
-
     }
 }

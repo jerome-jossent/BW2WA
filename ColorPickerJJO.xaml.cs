@@ -6,7 +6,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-namespace Standard_UC_JJO
+namespace BW_to_WandAlpha
 {
     public partial class ColorPickerJJO : UserControl
     {
